@@ -20,14 +20,14 @@ pros::adi::DigitalOut piston1('B'); // piston on port B
 pros::adi::DigitalOut piston2('C'); // piston on port C
 
 // Define intake motors
-pros::Motor right_intake_motor(20, pros::MotorGearset::green); //
+pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::green); // intake motors on ports 7 and 20
 
 // Define drivetrain
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group
                               9.5, // 9.5 inch track width
                               lemlib::Omniwheel::OLD_4, // using old 4" omnis
-                              600, // drivetrain rpm is 600
+                              300, // drivetrain rpm is 300
                               2 // horizontal drift is 2 (for now)
 );
 
@@ -63,11 +63,25 @@ lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
                                               0 // maximum acceleration (slew)
 );
 
+// input curve for throttle input during driver control
+lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
+                                     10, // minimum output where drivetrain will move out of 127
+                                     1.019 // expo curve gain
+);
+
+// input curve for steer input during driver control
+lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
+                                  10, // minimum output where drivetrain will move out of 127
+                                  1.019 // expo curve gain
+);
+
 // create the chassis
 lemlib::Chassis chassis(drivetrain, // drivetrain settings
                         lateral_controller, // lateral PID settings
                         angular_controller, // angular PID settings
-                        sensors // odometry sensors
+                        sensors, // odometry sensors
+						&throttle_curve, // throttle input curve
+						&steer_curve // steer input curve
 );
 
 // initialize function. Runs on program startup
@@ -94,22 +108,22 @@ void opcontrol() {
     while (true) {
         // get left y and right x positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 		bool intakeForwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 		bool intakeBackwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
 		bool X = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);		
 		bool B = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
 
         // move the robot
-        chassis.arcade(leftY, leftX);
+        chassis.curvature(leftY, rightX);
 
         // control the intake motors
         if (intakeForwardButton) {
-            right_intake_motor.move_velocity(200);
+            intake_motors.move_velocity(200);
         } else if (intakeBackwardButton) {
-            right_intake_motor.move_velocity(-200);
+            intake_motors.move_velocity(-200);
         } else {
-            right_intake_motor.move_velocity(0);
+            intake_motors.move_velocity(0);
         }
 
 		// control the pistons
