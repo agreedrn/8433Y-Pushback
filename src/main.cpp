@@ -22,6 +22,18 @@ pros::adi::DigitalOut piston2('C'); // piston on port C
 // Define intake motors
 pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::green); // intake motors on ports 7 and 20
 
+// create an imu on port 
+pros::Imu imu(11);
+
+// create a v5 rotation sensor on port 
+pros::Rotation rotation_sensor(12);
+
+// vertical tracking wheel encoder
+pros::adi::Encoder vertical_encoder('C', 'D', true);
+
+// vertical tracking wheel
+lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
+
 // Define drivetrain
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group
@@ -146,4 +158,12 @@ void opcontrol() {
         // delay to save resources
         pros::delay(25);
     }
+}
+
+void autonomous() {
+    // drive forward
+    chassis.moveToPoint(600, -600, 4000); // drive to point (600, -600)
+    chassis.turnToHeading(135, 4000); // turn to 135 degrees
+    chassis.moveToPoint(1725, -1200, 4000); // drive to point (1725, -1200)
+    chassis.turnToHeading(45, 4000); // turn to 45 degrees
 }
