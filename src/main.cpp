@@ -12,7 +12,7 @@ bool B_prev = false;
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // Define drivetrain motors
-pros::MotorGroup left_motors({-2, -3, -5}, pros::MotorGearset::blue); // left motors on ports 2, 3, 5
+pros::MotorGroup left_motors({-2, 3, -5}, pros::MotorGearset::blue); // left motors on ports 2, 3, 5
 pros::MotorGroup right_motors({1, 4, 6}, pros::MotorGearset::blue); // right motors on ports 1, 4, 6
 
 // Define pneumatics
