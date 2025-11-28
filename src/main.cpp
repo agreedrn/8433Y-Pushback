@@ -3,7 +3,7 @@
 #include "pros/adi.hpp"
 
 bool Xon = false;
-bool Bon = false;
+bool Bon = true;
 
 bool X_prev = false;
 bool B_prev = false;
@@ -20,7 +20,7 @@ pros::adi::DigitalOut piston1('B'); // piston on port B
 pros::adi::DigitalOut piston2('C'); // piston on port C
 
 // Define intake motors
-pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::green); // intake motors on ports 7 and 20
+pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::blue); // intake motors on ports 7 and 20
 
 // create an imu on port 
 pros::Imu imu(11);
@@ -29,7 +29,7 @@ pros::Imu imu(11);
 pros::Rotation rotation_sensor(12);
 
 // vertical tracking wheel encoder
-pros::adi::Encoder vertical_encoder('C', 'D', true);
+pros::adi::Encoder vertical_encoder('F', 'D', true);
 
 // vertical tracking wheel
 lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
