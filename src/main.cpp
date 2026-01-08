@@ -21,11 +21,7 @@ pros::adi::DigitalOut piston1('A'); // piston on port B
 pros::adi::DigitalOut piston2('B'); // piston on port C
 
 // Define intake motors
-<<<<<<< HEAD
 pros::MotorGroup intake_motors({-1, 2}, pros::MotorGearset::blue); // intake motors on ports 7 and 20
-=======
-pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::blue); // intake motors on ports 7 and 20
->>>>>>> f5747b394409c9a0d66919cc491620a452276e76
 
 // create an imu on port 
 pros::Imu imu(10);
@@ -34,10 +30,6 @@ pros::Imu imu(10);
 pros::Rotation rotation_sensor(20);
 
 // vertical tracking wheel encoder
-<<<<<<< HEAD
-=======
-pros::adi::Encoder vertical_encoder('F', 'D', true);
->>>>>>> f5747b394409c9a0d66919cc491620a452276e76
 
 // vertical tracking wheel
 lemlib::TrackingWheel vertical_tracking_wheel(&rotation_sensor, lemlib::Omniwheel::NEW_275, -2.5);
