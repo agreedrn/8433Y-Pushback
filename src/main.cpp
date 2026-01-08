@@ -1,5 +1,6 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "lemlib/chassis/trackingWheel.hpp"
 #include "pros/adi.hpp"
 
 bool Xon = false;
@@ -12,43 +13,42 @@ bool B_prev = false;
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // Define drivetrain motors
-pros::MotorGroup left_motors({-2, 3, -5}, pros::MotorGearset::blue); // left motors on ports 2, 3, 5
-pros::MotorGroup right_motors({1, 4, 6}, pros::MotorGearset::blue); // right motors on ports 1, 4, 6
+pros::MotorGroup left_motors({5, 6, -7}, pros::MotorGearset::blue); // left motors on ports 2, 3, 5
+pros::MotorGroup right_motors({-8, -9, 4}, pros::MotorGearset::blue); // right motors on ports 1, 4, 6
 
 // Define pneumatics
-pros::adi::DigitalOut piston1('B'); // piston on port B
-pros::adi::DigitalOut piston2('C'); // piston on port C
+pros::adi::DigitalOut piston1('A'); // piston on port B
+pros::adi::DigitalOut piston2('B'); // piston on port C
 
 // Define intake motors
-pros::MotorGroup intake_motors({-7, 20}, pros::MotorGearset::green); // intake motors on ports 7 and 20
+pros::MotorGroup intake_motors({-1, 2}, pros::MotorGearset::blue); // intake motors on ports 7 and 20
 
 // create an imu on port 
-pros::Imu imu(11);
+pros::Imu imu(10);
 
 // create a v5 rotation sensor on port 
-pros::Rotation rotation_sensor(12);
+pros::Rotation rotation_sensor(20);
 
 // vertical tracking wheel encoder
-pros::adi::Encoder vertical_encoder('C', 'D', true);
 
 // vertical tracking wheel
-lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_275, -2.5);
+lemlib::TrackingWheel vertical_tracking_wheel(&rotation_sensor, lemlib::Omniwheel::NEW_275, -2.5);
 
 // Define drivetrain
-lemlib::Drivetrain drivetrain(&left_motors, // left motor group
-                              &right_motors, // right motor group
+lemlib::Drivetrain drivetrain(&right_motors, // left motor group
+                              &left_motors, // right motor group
                               9.5, // 9.5 inch track width
-                              lemlib::Omniwheel::OLD_4, // using old 4" omnis
-                              300, // drivetrain rpm is 300
+                              lemlib::Omniwheel::NEW_325, // using old 4" omnis
+                              450, // drivetrain rpm is 300
                               2 // horizontal drift is 2 (for now)
 );
 
 // odometry settings
-lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
+lemlib::OdomSensors sensors(&vertical_tracking_wheel, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr, // horizontal tracking wheel 1
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            nullptr // inertial sensor
+                             &imu // inertial sensor
 );
 
 // lateral PID controller
@@ -123,17 +123,17 @@ void opcontrol() {
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 		bool intakeForwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 		bool intakeBackwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-		bool X = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);		
-		bool B = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
+		bool X = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);		
+		bool B = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
 
         // move the robot
         chassis.curvature(leftY, rightX);
 
         // control the intake motors
         if (intakeForwardButton) {
-            intake_motors.move_velocity(200);
+            intake_motors.move_velocity(600);
         } else if (intakeBackwardButton) {
-            intake_motors.move_velocity(-200);
+            intake_motors.move_velocity(-600);
         } else {
             intake_motors.move_velocity(0);
         }
@@ -162,8 +162,8 @@ void opcontrol() {
 
 void autonomous() {
     // drive forward
-    chassis.moveToPoint(600, -600, 4000); // drive to point (600, -600)
-    chassis.turnToHeading(135, 4000); // turn to 135 degrees
-    chassis.moveToPoint(1725, -1200, 4000); // drive to point (1725, -1200)
-    chassis.turnToHeading(45, 4000); // turn to 45 degrees
+    // chassis.moveToPoint(600, -600, 4000); // drive to point (600, -600)
+    // chassis.turnToHeading(135, 4000); // turn to 135 degrees
+    // chassis.moveToPoint(1725, -1200, 4000); // drive to point (1725, -1200)
+    // chassis.turnToHeading(45, 4000); // turn to 45 degrees
 }
