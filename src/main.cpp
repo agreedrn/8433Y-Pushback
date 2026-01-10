@@ -1,35 +1,33 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/misc.h"
 
-<<<<<<< HEAD
-bool Xon = false;
-bool Bon = true;
+bool pRon = false;
+bool pYon = false;
+bool pL2on = false;
 
-bool X_prev = false;
-bool B_prev = false;
+bool pR_prev = false;
+bool pY_prev = false;
+bool pL2_prev = false;
 
-=======
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
+bool flap = true;
+
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
-pros::MotorGroup rightMotors({5, 6, -7},
-                            pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
+pros::MotorGroup rightMotors({5, 6, -7}, pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup leftMotors({-8, -9, 4}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
-<<<<<<< HEAD
 
 pros::Motor bottom_intake(-1, pros::MotorGearset::blue); // intake motors on ports 7 and 20
 
 pros::Motor top_intake(2, pros::MotorGearset::blue);
 
 // Define pneumatics
-pros::adi::DigitalOut piston1('A'); // piston on port B
-pros::adi::DigitalOut piston2('B'); // piston on port C
+pros::adi::DigitalOut piston1('A'); // piston on port A
+pros::adi::DigitalOut piston2('B'); // piston on port B
+pros::adi::DigitalOut piston3('C'); // piston on port C
 
-=======
-
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
 // Inertial Sensor on port 10
 pros::Imu imu(10);
 
@@ -37,22 +35,14 @@ pros::Imu imu(10);
 // vertical tracking wheel encoder. Rotation sensor, port 11, reversed
 pros::Rotation verticalEnc(20);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-<<<<<<< HEAD
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 2.5);
-=======
-lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0.75);
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
-<<<<<<< HEAD
                               12, // 10 inch track width
-=======
-                              12.25, // 10 inch track width
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
-                              lemlib::Omniwheel::NEW_325, // using new 4" omnis
-                              450, // drivetrain rpm is 360
+                              lemlib::Omniwheel::NEW_325, 
+                              450, 
                               2 // horizontal drift is 2. If we had traction wheels, it would have been 8
 );
 
@@ -67,7 +57,6 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
                                               0 // maximum acceleration (slew)
 );
 
-<<<<<<< HEAD
 lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               18, // derivative gain (kD)
@@ -76,16 +65,6 @@ lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
                                               0, // small error range timeout, in milliseconds
                                               0, // large error range, in inches
                                               0, // large error range timeout, in milliseconds
-=======
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              100, // integral gain (kI)
-                                              20, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
                                               0 // maximum acceleration (slew)
 );
 
@@ -110,11 +89,7 @@ lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
 );
 
 // create the chassis
-<<<<<<< HEAD
-lemlib::Chassis chassis(drivetrain, lateral_controller, angular_controller, sensors, &throttle_curve, &steer_curve);
-=======
 lemlib::Chassis chassis(drivetrain, lateral_controller, angular_controller, sensors, &throttleCurve, &steerCurve);
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -169,31 +144,27 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-<<<<<<< HEAD
     // set position to x:0, y:0, heading:0
     chassis.setPose(0, 0, 0);
     //set for high goal
     piston2.set_value(true);
+    piston3.set_value(true);
     // turn to face heading 90 with a very long timeout
     bottom_intake.move_velocity(600);
     top_intake.move_velocity(-600);
-    chassis.moveToPose(6.32, 26.23, 22.08, 5000, {.maxSpeed = 300});
+    chassis.moveToPose(8.174, 34.154, 16.36, 2000, {.maxSpeed = 300});
     // move to match loader ready position
-    chassis.turnToHeading(120, 5000, {.maxSpeed = 300});
-    chassis.moveToPoint(30.34,1.286, 5000, {.maxSpeed = 300});
-    chassis.turnToHeading(180, 5000, {.maxSpeed = 300});
+    chassis.turnToHeading(120, 2000, {.maxSpeed = 300});
+    chassis.moveToPoint(30.34,-2, 2000, {.maxSpeed = 300});
+    chassis.moveToPoint(30.34, 1.286, 2000, {.maxSpeed = 300});
+    chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
     piston1.set_value(true);
     pros::delay(500);
-    chassis.moveToPose(30.34, -8, 179.0, 5000, {.maxSpeed = 300});
-    chassis.moveToPose(30.834, 22.904, 178.05, 5000, {.forwards = false, .maxSpeed = 30});
+    chassis.moveToPose(30.34, -20, 179.0, 2500, {.maxSpeed = 600});
+    chassis.moveToPose(30.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 300});
+    top_intake.move_velocity(600);
     
 }
-=======
-   // set position to x:0, y:0, heading:0
-    chassis.setPose(0, 0, 0);
-    // turn to face heading 90 with a very long timeout
-    chassis.turnToHeading(90, 100000);}
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
 
 /**
  * Runs in driver control
@@ -204,51 +175,62 @@ void opcontrol() {
     while (true) {
         // get joystick positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-<<<<<<< HEAD
+        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 		bool intakeForwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 		bool intakeBackwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-		bool X = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);		
-		bool B = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
+        bool flapButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
+		bool pR = controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);		
+		bool pY = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
+        bool pL2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
 
         // move the robot
-        chassis.curvature(leftY, rightX);
+        chassis.curvature(leftY, leftX);
 
         // control the intake motors
         if (intakeForwardButton) {
             bottom_intake.move_velocity(600);
+            if (flap) {
+                top_intake.move_velocity(-600);
+            } else {
+                top_intake.move_velocity(600);
+            }
         } else if (intakeBackwardButton) {
             bottom_intake.move_velocity(-600);
-        } else {
-            bottom_intake.move_velocity(0);
+            if (flap) {
+                top_intake.move_velocity(600);
+            } else {
+                top_intake.move_velocity(-600);
+            }
+        } 
+
+        if (flapButton) {
+            flap = !flap;
+            pros::delay(250); // debounce
         }
 
 		// control the pistons
 		// X button toggle
-		if (X && !X_prev) {           // just pressed this loop
-			Xon = !Xon;               // flip state
-			piston1.set_value(Xon);   // set piston to state
+		if (pR && !pR_prev) {           // just pressed this loop
+			pRon = !pRon;               // flip state
+			piston1.set_value(pRon);   // set piston to state
 		}
 
 		// B button toggle
-		if (B && !B_prev) {           // just pressed this loop
-			Bon = !Bon;
-			piston2.set_value(Bon);
+		if (pY && !pY_prev) {           // just pressed this loop
+			pYon = !pYon;
+			piston2.set_value(pYon);
 		}
 
-		// remember button state for next loop
-		X_prev = X;
-		B_prev = B;
+        if (pL2 && !pL2_prev) {           // just pressed this loop
+            pL2on = !pL2on;
+            piston3.set_value(pL2on);
+        }
 
-=======
-        // move the chassis with curvature drive
-        chassis.arcade(leftY, rightX);
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
+		// remember button state for next loop
+		pR_prev = pR;
+		pY_prev = pY;
+
         // delay to save resources
         pros::delay(10);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 1a7fc88e2d1d1fb255d73ee99b65547512259561
