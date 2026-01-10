@@ -184,7 +184,7 @@ void opcontrol() {
         bool pL2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
 
         // move the robot
-        chassis.curvature(leftY, leftX);
+        chassis.curvature(leftY, leftX, true);
 
         // control the intake motors
         if (intakeForwardButton) {
@@ -229,6 +229,7 @@ void opcontrol() {
 		// remember button state for next loop
 		pR_prev = pR;
 		pY_prev = pY;
+        pL2_prev = pL2;
 
         // delay to save resources
         pros::delay(10);
