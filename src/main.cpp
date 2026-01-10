@@ -160,7 +160,7 @@ void autonomous() {
     chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
     piston1.set_value(true);
     pros::delay(500);
-    chassis.moveToPose(30.34, -20, 179.0, 2500, {.maxSpeed = 600});
+    chassis.moveToPose(30.34, -35, 179.0, 2500, {.maxSpeed = 600});
     chassis.moveToPose(30.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 300});
     top_intake.move_velocity(600);
     
