@@ -1,6 +1,7 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "pros/misc.h"
+#include "pros/motors.h"
 
 bool pRon = false;
 bool pYon = false;
@@ -82,7 +83,7 @@ lemlib::ExpoDriveCurve throttleCurve(3, // joystick deadband out of 127
                                      1.019 // expo curve gain
 );
 
-// input curve for steer input during driver control
+// input curve for steer input during driver controlz
 lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
                                   10, // minimum output where drivetrain will move out of 127
                                   1.019 // expo curve gain
@@ -116,10 +117,10 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            // log position telemetry
+            controller.print(0, 0, "X: %f", pros::c::motor_get_temperature(1)); // x            // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
             // delay to save resources
-            pros::delay(50);
+            pros::delay(100);
         }
     });
 }
@@ -145,25 +146,24 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
  */
 void autonomous() {
     // set position to x:0, y:0, heading:0
-    chassis.setPose(0, 0, 0);
-    //set for high goal
-    piston2.set_value(true);
-    piston3.set_value(true);
-    // turn to face heading 90 with a very long timeout
-    bottom_intake.move_velocity(600);
-    top_intake.move_velocity(-600);
-    chassis.moveToPose(8.174, 34.154, 16.36, 2000, {.maxSpeed = 300});
-    // move to match loader ready position
-    chassis.turnToHeading(120, 2000, {.maxSpeed = 300});
-    chassis.moveToPoint(30.34,-2, 2000, {.maxSpeed = 300});
-    chassis.moveToPoint(30.34, 1.286, 2000, {.maxSpeed = 300});
-    chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
-    piston1.set_value(true);
-    pros::delay(500);
-    chassis.moveToPose(30.34, -35, 179.0, 2500, {.maxSpeed = 600});
-    chassis.moveToPose(30.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 300});
-    top_intake.move_velocity(600);
-    
+    // chassis.setPose(0, 0, 0);
+    // //set for high goal
+    // piston2.set_value(true);
+    // piston3.set_value(true);
+    // // turn to face heading 90 with a very long timeout
+    // bottom_intake.move_velocity(600);
+    // top_intake.move_velocity(-600);
+    // chassis.moveToPose(8.174, 34.154, 16.36, 2000, {.maxSpeed = 300});
+    // // move to match loader ready position
+    // chassis.turnToHeading(120, 2000, {.maxSpeed = 300});
+    // chassis.moveToPoint(31.34,-2, 2000, {.maxSpeed = 300});
+    // chassis.moveToPoint(31.34, 1.286, 2000, {.maxSpeed = 300});
+    // chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
+    // piston1.set_value(true);
+    // pros::delay(500);
+    // chassis.moveToPose(31.34, -35, 179.0, 2500, {.maxSpeed = 300});
+    // chassis.moveToPose(31.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 200});
+    // top_intake.move_velocity(600);   
 }
 
 /**
@@ -175,7 +175,7 @@ void opcontrol() {
     while (true) {
         // get joystick positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 		bool intakeForwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 		bool intakeBackwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
         bool flapButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
@@ -184,7 +184,7 @@ void opcontrol() {
         bool pL2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
 
         // move the robot
-        chassis.curvature(leftY, leftX, true);
+        chassis.curvature(leftY, leftX);
 
         // control the intake motors
         if (intakeForwardButton) {
@@ -196,12 +196,11 @@ void opcontrol() {
             }
         } else if (intakeBackwardButton) {
             bottom_intake.move_velocity(-600);
-            if (flap) {
-                top_intake.move_velocity(600);
-            } else {
-                top_intake.move_velocity(-600);
-            }
-        } 
+            top_intake.move_velocity(-600);
+        } else {
+            top_intake.move_velocity(0);
+            bottom_intake.move_velocity(0);
+        }
 
         if (flapButton) {
             flap = !flap;
