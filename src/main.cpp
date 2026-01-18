@@ -11,8 +11,6 @@ bool pR_prev = false;
 bool pY_prev = false;
 bool pL2_prev = false;
 
-bool flap = true;
-
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
@@ -25,9 +23,9 @@ pros::Motor bottom_intake(-1, pros::MotorGearset::blue); // intake motors on por
 pros::Motor top_intake(2, pros::MotorGearset::blue);
 
 // Define pneumatics
-pros::adi::DigitalOut piston1('A'); // piston on port A
-pros::adi::DigitalOut piston2('B'); // piston on port B
-pros::adi::DigitalOut piston3('C'); // piston on port C
+pros::adi::DigitalOut piston1('A'); // piston on port A, score
+pros::adi::DigitalOut piston2('B'); // piston on port B, match loader
+pros::adi::DigitalOut piston3('C'); // piston on port C, doinker
 
 // Inertial Sensor on port 10
 pros::Imu imu(10);
@@ -55,7 +53,7 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
                                               0, // small error range timeout, in milliseconds
                                               0, // large error range, in inches
                                               0, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
+                                              20 // maximum acceleration (slew)
 );
 
 lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
@@ -78,15 +76,15 @@ lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
 );
 
 // input curve for throttle input during driver control
-lemlib::ExpoDriveCurve throttleCurve(3, // joystick deadband out of 127
-                                     10, // minimum output where drivetrain will move out of 127
-                                     1.019 // expo curve gain
+lemlib::ExpoDriveCurve throttleCurve(10, // joystick deadband out of 127
+                                     0, // minimum output where drivetrain will move out of 127
+                                     1.55 // expo curve gain
 );
 
 // input curve for steer input during driver controlz
-lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
-                                  10, // minimum output where drivetrain will move out of 127
-                                  1.019 // expo curve gain
+lemlib::ExpoDriveCurve steerCurve(10, // joystick deadband out of 127
+                                  0, // minimum outputslew where drivetrain will move out of 127
+                                  2.10 // expo curve gain
 );
 
 // create the chassis
@@ -128,7 +126,9 @@ void initialize() {
 /**
  * Runs while the robot is disabled
  */
-void disabled() {}
+void disabled() {
+    // KADEN: put auton selector code here
+}
 
 /**
  * runs after initialize if the robot is connected to field control
@@ -145,43 +145,48 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    // set position to x:0, y:0, heading:0
-    // chassis.setPose(0, 0, 0);
-    // //set for high goal
-    // piston2.set_value(true);
-    // piston3.set_value(true);
-    // // turn to face heading 90 with a very long timeout
-    // bottom_intake.move_velocity(600);
-    // top_intake.move_velocity(-600);
-    // chassis.moveToPose(8.174, 34.154, 16.36, 2000, {.maxSpeed = 300});
-    // // move to match loader ready position
-    // chassis.turnToHeading(120, 2000, {.maxSpeed = 300});
-    // chassis.moveToPoint(31.34,-2, 2000, {.maxSpeed = 300});
-    // chassis.moveToPoint(31.34, 1.286, 2000, {.maxSpeed = 300});
-    // chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
-    // piston1.set_value(true);
-    // pros::delay(500);
-    // chassis.moveToPose(31.34, -35, 179.0, 2500, {.maxSpeed = 300});
-    // chassis.moveToPose(31.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 200});
-    // top_intake.move_velocity(600);   
+    //set position to x:0, y:0, heading:0
+    chassis.setPose(0, 0, 0);
+    //set for high goal
+    piston2.set_value(true);
+    piston3.set_value(true);
+    // turn to face heading 90 with a very long timeout
+    bottom_intake.move_velocity(600);
+    chassis.moveToPose(8.174, 34.154, 16.36, 2000, {.maxSpeed = 300});
+    // move to match loader ready position
+    chassis.turnToHeading(120, 2000, {.maxSpeed = 300});
+    chassis.moveToPoint(31.34,-2, 2000, {.maxSpeed = 300});
+    chassis.moveToPoint(31.34, 1.286, 2000, {.maxSpeed = 300});
+    chassis.turnToHeading(180, 2000, {.maxSpeed = 300});
+    piston1.set_value(true);
+    pros::delay(500);
+    chassis.moveToPose(31.34, -35, 179.0, 2500, {.maxSpeed = 300});
+    chassis.moveToPose(31.834, 22.904, 178.05, 2000, {.forwards = false, .maxSpeed = 200});
+    top_intake.move_velocity(600);   
 }
 
 /**
  * Runs in driver control
  */
 void opcontrol() {
+    pRon = true;
+    pYon = true;
+    pL2on = true;
+    pR_prev = true;
+    pY_prev = true;
+    pL2_prev = true;
     // controller
     // loop to continuously update motors
     while (true) {
         // get joystick positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+        int leftX = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 		bool intakeForwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 		bool intakeBackwardButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-        bool flapButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
-		bool pR = controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);		
-		bool pY = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
-        bool pL2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
+        bool flapButton = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
+		bool pR = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);	// score
+		bool pY = controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT); // match loader
+        bool pL2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2); // doinker
 
         // move the robot
         chassis.curvature(leftY, leftX);
@@ -189,22 +194,15 @@ void opcontrol() {
         // control the intake motors
         if (intakeForwardButton) {
             bottom_intake.move_velocity(600);
-            if (flap) {
-                top_intake.move_velocity(-600);
-            } else {
-                top_intake.move_velocity(600);
-            }
         } else if (intakeBackwardButton) {
-            bottom_intake.move_velocity(-600);
+            bottom_intake.move_velocity(600);
+            top_intake.move_velocity(600);
+        } else if (flapButton) {
             top_intake.move_velocity(-600);
+            bottom_intake.move_velocity(-600);
         } else {
-            top_intake.move_velocity(0);
             bottom_intake.move_velocity(0);
-        }
-
-        if (flapButton) {
-            flap = !flap;
-            pros::delay(250); // debounce
+            top_intake.move_velocity(0);
         }
 
 		// control the pistons
