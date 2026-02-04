@@ -27,8 +27,8 @@ pros::Motor bottom_intake(-1, pros::MotorGearset::blue); // intake motors on por
 pros::Motor top_intake(2, pros::MotorGearset::blue);
 
 // Define pneumatics
-pros::adi::DigitalOut piston1('A'); // piston on port A, score
-pros::adi::DigitalOut piston2('B'); // piston on port B, match loader
+pros::adi::DigitalOut piston1('B'); // piston on port A, score
+pros::adi::DigitalOut piston2('A'); // piston on port B, match loader
 pros::adi::DigitalOut piston3('C'); // piston on port C, doinker
 
 // Inertial Sensor on port 10
@@ -49,7 +49,7 @@ lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               12, // 10 inch track width
                               lemlib::Omniwheel::NEW_325, 
                               450, 
-                              2 // horizontal drift is 2. If we had traction wheels, it would have been 8
+                              8 // horizontal drift is 2. If we had traction wheels, it would have been 8
 );
 
 lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
@@ -60,7 +60,7 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
                                               0, // small error range timeout, in milliseconds
                                               0, // large error range, in inches
                                               0, // large error range timeout, in milliseconds
-                                              1 // maximum acceleration (slew)
+                                              .5 // maximum acceleration (slew)
 );
 
 lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
@@ -85,13 +85,13 @@ lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
 // input curve for throttle input during driver control
 lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
                                      10, // minimum output where drivetrain will move out of 127
-                                     1.019 // expo curve gain
+                                     1.06 // expo curve gain
 );
 
 // input curve for steer input during driver control
 lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
                                   10, // minimum output where drivetrain will move out of 127
-                                  1.019 // expo curve gain
+                                  1.09 // expo curve gain
 );
 
 // create the chassis
@@ -118,14 +118,14 @@ void auton1() {
     chassis.waitUntilDone();
     piston1.set_value(true);
     pros::delay(1000);
-    chassis.moveToPoint(40.2556, -10.8133, 2000, {.minSpeed = 200});
+    chassis.moveToPoint(41.2556, -2.5133, 2000, {.minSpeed = 200});
     chassis.waitUntilDone();
-    drivetrain.leftMotors->move_velocity(28);
-    drivetrain.rightMotors->move_velocity(28);
-    pros::delay(1750);
+    drivetrain.leftMotors->move_velocity(21);
+    drivetrain.rightMotors->move_velocity(21);
+    pros::delay(5750);
     drivetrain.leftMotors->move_velocity(0);
     drivetrain.rightMotors->move_velocity(0);
-    chassis.moveToPose(42,23, 180, 2000, {.forwards = false, .maxSpeed = 100});
+    chassis.moveToPose(44,23, 180, 2000, {.forwards = false, .maxSpeed = 200});
     chassis.waitUntilDone();
     top_intake.move_velocity(600);   
 }
@@ -160,6 +160,8 @@ void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
+    piston2.set_value(true);
+    //piston1.set_value(true);
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
     // lemlib::bufferedStdout().setRate(...);
@@ -175,8 +177,8 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            controller.print(0, 0, "Intake Temp: %f", pros::c::motor_get_temperature(1)); // x            // log position telemetry
-            controller.print(1, 0, "Auton: %d", autonselected);
+            controller.print(0, 0, "IT: %f", pros::c::motor_get_temperature(1)); // x            // log position telemetry
+            controller.print(0, 10, "A: %d", autonselected);
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
             // delay to save resources
             pros::delay(100);
@@ -210,19 +212,26 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    selectAuton();
+    piston1.set_value(false);
+    //bottom_intake.move_velocity(600);
+    //top_intake.move_velocity(600);
+    pros::delay(500);
+    chassis.arcade(-127, 0);
+    pros::delay(300);
+    chassis.arcade(127, 0);
+    pros::delay(700);
+    chassis.arcade(70, 0);
+    pros::delay(4000);
+    chassis.arcade(0,0);
+    bottom_intake.move_velocity(0);
+    top_intake.move_velocity(0);
 }  
-
 /**
  * Runs in driver control
  */
 void opcontrol() {
-    pRon = true;
     pYon = true;
-    pL2on = true;
-    pR_prev = true;
     pY_prev = true;
-    pL2_prev = true;
     // controller
     // loop to continuously update motors
     while (true) {
@@ -266,9 +275,14 @@ void opcontrol() {
 			piston2.set_value(pYon);
 		}
 
-        if (pL2 && !pL2_prev) {           // just pressed this loop
-            pL2on = !pL2on;
-            piston3.set_value(pL2on);
+        // On press: extend piston
+        if (pL2 && !pL2_prev) {
+            piston3.set_value(true);
+        }
+
+        // On release: retract piston
+        if (!pL2 && pL2_prev) {
+            piston3.set_value(false);
         }
 
 		// remember button state for next loop
